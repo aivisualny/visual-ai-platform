@@ -7,41 +7,63 @@ import uuid
 import os
 import traceback
 import torch
+import asyncio
 
 app = FastAPI()
 
-# CORS 설정: 프론트엔드와 통신 허용
+# CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React dev 서버 주소
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 정적 이미지 저장 경로
+# 정적 파일 경로 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 static_path = os.path.join(BASE_DIR, "static")
+generated_folder = os.path.join(static_path, "generated_images")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
+# 서버 시작 시 epoch 이미지 제외한 파일 삭제
+def clear_generated_images_except_epoch(folder_path):
+    os.makedirs(folder_path, exist_ok=True)
+    for filename in os.listdir(folder_path):
+        if not filename.startswith("epoch_"):
+            file_path = os.path.join(folder_path, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+clear_generated_images_except_epoch(generated_folder)
+
+
+# 10분 후 파일 삭제 함수
+async def remove_file_later(file_path, delay=600):
+    await asyncio.sleep(delay)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+# 이미지 생성 API
 @app.post("/generate")
 async def generate_image(request: Request):
     try:
         data = await request.json()
-        noise = data.get("noise", None)  # 노이즈 벡터 수신
+        noise = data.get("noise", None)
 
-        os.makedirs("static/generated_images", exist_ok=True)
+        os.makedirs(generated_folder, exist_ok=True)
         filename = f"{uuid.uuid4().hex}.png"
-        output_path = os.path.join("static", "generated_images", filename)
+        output_path = os.path.join(generated_folder, filename)
 
         if noise:
-            # 리스트를 torch tensor로 변환
             z_tensor = torch.tensor(noise, dtype=torch.float32).view(1, 100, 1, 1)
         else:
-            z_tensor = None  # 무작위 노이즈 생성
+            z_tensor = None
 
-        # 생성자 모델로 이미지 생성
         load_generator_and_generate(z_tensor=z_tensor, save_path=output_path)
+
+        # 10분 후 이미지 삭제
+        asyncio.create_task(remove_file_later(output_path))
 
         return {"image_path": f"/static/generated_images/{filename}"}
 

@@ -1,9 +1,41 @@
+# Python
 venv/
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
 *.pth
+*.log
+*.sqlite3
+*.db
+instance/
+.env
+.env.*
+
+# VSCode, macOS 등 IDE/OS 관련
 .vscode/
 .DS_Store
-*.log
+Thumbs.db
+
+# FastAPI - 모델 체크포인트나 미디어 파일
+backend/models/checkpoints/
+backend/media/
+backend/generated_images/
+
+# React
+frontend/node_modules/
+frontend/.env
+frontend/.DS_Store
+frontend/build/
+frontend/dist/
+
+# React cache
+frontend/.next/
+frontend/.parcel-cache/
+frontend/.eslintcache
+
+# OS
+*.swp
+*.bak
+*.tmp
+*.orig

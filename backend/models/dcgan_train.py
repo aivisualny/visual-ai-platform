@@ -1,3 +1,5 @@
+# backend/models/dcgan_train.py
+
 import torch
 import torch.nn as nn
 import torchvision
@@ -20,7 +22,7 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize([0.5], [0.5])
 ])
-dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+dataset = torchvision.datasets.MNIST(root='data', train=True, download=True, transform=transform)
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 class Generator(nn.Module):
@@ -68,8 +70,8 @@ if __name__ == "__main__":
     optimizerG = torch.optim.Adam(netG.parameters(), lr=lr, betas=(0.5, 0.999))
 
     fixed_noise = torch.randn(64, nz, 1, 1, device=device)
-    os.makedirs('backend/static/generated_images', exist_ok=True)
-    os.makedirs('backend/models/checkpoints', exist_ok=True)
+    os.makedirs('static/generated_images', exist_ok=True)
+    os.makedirs('models/checkpoints', exist_ok=True)
 
     for epoch in range(num_epochs):
         for i, (real, _) in enumerate(dataloader):
@@ -105,10 +107,10 @@ if __name__ == "__main__":
             grid = torchvision.utils.make_grid(fake, padding=2, normalize=True)
             plt.imshow(grid.permute(1, 2, 0).numpy())
             plt.axis("off")
-            plt.savefig(f"backend/static/generated_images/epoch_{epoch+1}.png")
+            plt.savefig(f"static/generated_images/epoch_{epoch+1}.png")
             plt.close()
             print(f"[✔] epoch_{epoch+1}.png 저장 완료")
 
     # 모델 저장
-    torch.save(netG.state_dict(), "backend/models/checkpoints/generator.pth")
+    torch.save(netG.state_dict(), "models/checkpoints/generator.pth")
     print("훈련 완료 및 모델 저장 완료!")

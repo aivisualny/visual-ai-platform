@@ -2,8 +2,9 @@ import { useState } from 'react';
 
 function App() {
   const zDim = 100; // 노이즈 차원
-  const [noise, setNoise] = useState(Array(zDim).fill(0)); // 초기 노이즈
+  const [noise, setNoise] = useState(Array(zDim).fill(0)); // 초기 노이즈 (0으로 초기화)
   const [imageUrl, setImageUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // 슬라이더 값 변경 시 노이즈 배열 업데이트
   const handleSliderChange = (index, value) => {
@@ -14,6 +15,7 @@ function App() {
 
   // 이미지 생성 요청
   const handleGenerate = async () => {
+    setLoading(true);
     const response = await fetch('http://localhost:8000/generate', {
       method: 'POST',
       headers: {
@@ -24,15 +26,21 @@ function App() {
 
     const data = await response.json();
     setImageUrl(`http://localhost:8000${data.image_path}`);
+    setLoading(false);
   };
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>DCGAN 이미지 생성기</h1>
+      <h1>GAN 이미지 생성기</h1>
 
       <div style={{ marginBottom: '20px' }}>
         <h3>노이즈 벡터 조절 (z)</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '4px', padding: '0 10%' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(10, 1fr)',
+          gap: '4px',
+          padding: '0 10%'
+        }}>
           {noise.map((val, i) => (
             <input
               key={i}
@@ -47,12 +55,14 @@ function App() {
         </div>
       </div>
 
-      <button onClick={handleGenerate}>이미지 생성</button>
+      <button onClick={handleGenerate} disabled={loading}>
+        {loading ? '생성 중...' : '이미지 생성'}
+      </button>
 
       {imageUrl && (
         <div style={{ marginTop: '30px' }}>
           <h3>생성된 이미지</h3>
-          <img src={imageUrl} alt="Generated" width="256" />
+          <img src={imageUrl} alt="Generated" width="280" />
         </div>
       )}
     </div>

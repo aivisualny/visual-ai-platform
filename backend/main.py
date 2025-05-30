@@ -11,7 +11,6 @@ import asyncio
 
 app = FastAPI()
 
-# CORS 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -20,13 +19,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 정적 파일 경로 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 static_path = os.path.join(BASE_DIR, "static")
 generated_folder = os.path.join(static_path, "generated_images")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
-# 서버 시작 시 epoch 이미지 제외한 파일 삭제
 def clear_generated_images_except_epoch(folder_path):
     os.makedirs(folder_path, exist_ok=True)
     for filename in os.listdir(folder_path):
@@ -37,14 +34,11 @@ def clear_generated_images_except_epoch(folder_path):
 
 clear_generated_images_except_epoch(generated_folder)
 
-
-# 10분 후 파일 삭제 함수
 async def remove_file_later(file_path, delay=600):
     await asyncio.sleep(delay)
     if os.path.exists(file_path):
         os.remove(file_path)
 
-# 이미지 생성 API
 @app.post("/generate")
 async def generate_image(request: Request):
     try:
@@ -56,13 +50,12 @@ async def generate_image(request: Request):
         output_path = os.path.join(generated_folder, filename)
 
         if noise:
-            z_tensor = torch.tensor(noise, dtype=torch.float32).view(1, 100, 1, 1)
+            z_tensor = torch.tensor(noise, dtype=torch.float32).view(1, 100)
         else:
             z_tensor = None
 
         load_generator_and_generate(z_tensor=z_tensor, save_path=output_path)
 
-        # 10분 후 이미지 삭제
         asyncio.create_task(remove_file_later(output_path))
 
         return {"image_path": f"/static/generated_images/{filename}"}

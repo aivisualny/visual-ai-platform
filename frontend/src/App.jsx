@@ -1,71 +1,17 @@
-import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import GanPage from './pages/GanPage';
+import DiffusionPage from './pages/DiffusionPage';
 
 function App() {
-  const zDim = 100; // 노이즈 차원
-  const [noise, setNoise] = useState(Array(zDim).fill(0)); // 초기 노이즈 (0으로 초기화)
-  const [imageUrl, setImageUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // 슬라이더 값 변경 시 노이즈 배열 업데이트
-  const handleSliderChange = (index, value) => {
-    const updatedNoise = [...noise];
-    updatedNoise[index] = parseFloat(value);
-    setNoise(updatedNoise);
-  };
-
-  // 이미지 생성 요청
-  const handleGenerate = async () => {
-    setLoading(true);
-    const response = await fetch('http://localhost:8000/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ noise }),  // noise 배열 전달
-    });
-
-    const data = await response.json();
-    setImageUrl(`http://localhost:8000${data.image_path}`);
-    setLoading(false);
-  };
-
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>GAN 이미지 생성기</h1>
-
-      <div style={{ marginBottom: '20px' }}>
-        <h3>노이즈 벡터 조절 (z)</h3>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(10, 1fr)',
-          gap: '4px',
-          padding: '0 10%'
-        }}>
-          {noise.map((val, i) => (
-            <input
-              key={i}
-              type="range"
-              min={-1}
-              max={1}
-              step={0.1}
-              value={val}
-              onChange={(e) => handleSliderChange(i, e.target.value)}
-            />
-          ))}
-        </div>
-      </div>
-
-      <button onClick={handleGenerate} disabled={loading}>
-        {loading ? '생성 중...' : '이미지 생성'}
-      </button>
-
-      {imageUrl && (
-        <div style={{ marginTop: '30px' }}>
-          <h3>생성된 이미지</h3>
-          <img src={imageUrl} alt="Generated" width="280" />
-        </div>
-      )}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/gan" element={<GanPage />} />
+        <Route path="/diffusion" element={<DiffusionPage />} />
+      </Routes>
+    </Router>
   );
 }
 
